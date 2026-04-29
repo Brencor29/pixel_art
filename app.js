@@ -5,11 +5,20 @@ const path = require('path');
 const http = require('http');
 const express = require('express');
 
-const CANVAS_W = 128;
-const CANVAS_H = 128;
+function clamp(n, lo, hi) { return Math.max(lo, Math.min(hi, n)); }
+function envInt(name, def, lo, hi) {
+  const n = parseInt(process.env[name], 10);
+  return Number.isFinite(n) ? clamp(n, lo, hi) : def;
+}
+
+const CANVAS_W = envInt('CANVAS_WIDTH',  128, 16, 512);
+const CANVAS_H = envInt('CANVAS_HEIGHT', 128, 16, 512);
 const CANVAS_SIZE = CANVAS_W * CANVAS_H;
 const PALETTE_SIZE = 32;
 const DEFAULT_COLOR = 7;
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
+
+console.log(`[config] canvas=${CANVAS_W}x${CANVAS_H} reset=${ADMIN_TOKEN ? 'ON' : 'OFF'}`);
 
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_PATH = path.join(DATA_DIR, 'canvas.db');
@@ -192,6 +201,31 @@ app.post('/pixel', (req, res) => {
     scheduleFlush();
     sseBroadcast('pixel', { x, y, c });
   }
+  res.json({ ok: true });
+});
+
+// --- Admin : reset du canvas (gardé par token) ------------------------------
+app.post('/admin/reset', (req, res) => {
+  if (!ADMIN_TOKEN) {
+    return res.status(503).json({ ok: false, error: 'reset disabled (no ADMIN_TOKEN configured)' });
+  }
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7).trim() : '';
+  if (!token || token !== ADMIN_TOKEN) {
+    return res.status(403).json({ ok: false, error: 'invalid token' });
+  }
+
+  canvas.fill(DEFAULT_COLOR);
+  // flush immédiat pour ce cas-ci (pas de risque d'écrasement par un pixel concurrent)
+  try { storage.save(canvas); dirty = false; }
+  catch (_) { scheduleFlush(); }
+
+  sseBroadcast('reset', {
+    width: CANVAS_W,
+    height: CANVAS_H,
+    color: DEFAULT_COLOR,
+  });
+  console.log('[admin] canvas reset');
   res.json({ ok: true });
 });
 

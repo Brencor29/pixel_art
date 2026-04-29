@@ -99,9 +99,9 @@ body {
   background:
     repeating-conic-gradient(var(--canvas-checker-a) 0% 25%, var(--canvas-checker-b) 0% 50%)
     50% / 16px 16px;
-  /* taille définie dynamiquement par JS via --zoom */
-  width: calc(128px * var(--zoom, 8));
-  height: calc(128px * var(--zoom, 8));
+  /* dimensions paramétrables : --w/--h fournis par JS, --zoom par les boutons */
+  width:  calc(var(--w, 128) * var(--zoom, 8) * 1px);
+  height: calc(var(--h, 128) * var(--zoom, 8) * 1px);
   flex: none;
 }
 
@@ -198,6 +198,23 @@ body {
   background: #000;
 }
 .selected-index { font-variant-numeric: tabular-nums; color: var(--dim); }
+
+.reset-btn {
+  background: transparent;
+  color: var(--ko);
+  border: 1px solid color-mix(in srgb, var(--ko) 40%, var(--border));
+  padding: 4px 10px;
+  border-radius: 4px;
+  font: inherit;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.reset-btn:hover {
+  background: var(--ko);
+  color: #1a0008;
+  border-color: var(--ko);
+}
 
 /* ---------- Responsive ---------------------------------------------------- */
 /* Tablette : la palette en 2 rangées de 16 → swatches plus gros, plus visibles */

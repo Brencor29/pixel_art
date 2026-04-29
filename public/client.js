@@ -12,8 +12,10 @@ const PALETTE = [
   '#065AB5', '#754665', '#FF6E59', '#FF9D81',
 ];
 
-const CANVAS_W = 128;
-const CANVAS_H = 128;
+// Dimensions reçues du serveur via l'événement `init` (CANVAS_WIDTH/HEIGHT côté env)
+let CANVAS_W = 128;
+let CANVAS_H = 128;
+const DEFAULT_COLOR = 7;
 
 // ----- Conversion palette en RGBA pour ImageData -----------------------------
 const paletteRGBA = PALETTE.map(hex => {
@@ -34,13 +36,27 @@ const statusText    = document.getElementById('status-text');
 const selectedSwatch = document.getElementById('selected-swatch');
 const selectedIndex  = document.getElementById('selected-index');
 const zoomBtns = document.querySelectorAll('.zoom-btn');
+const resetBtn  = document.getElementById('reset-btn');
 
 const ctx = canvasEl.getContext('2d');
-const imageData = ctx.createImageData(CANVAS_W, CANVAS_H);
-let pixelBuffer = new Uint8Array(CANVAS_W * CANVAS_H); // index palette par pixel
+let imageData  = ctx.createImageData(CANVAS_W, CANVAS_H);
+let pixelBuffer = new Uint8Array(CANVAS_W * CANVAS_H);
 
 let selectedColor = 8; // rouge PICO-8 par défaut
 let zoom = 8;
+
+// (Re)dimensionne tous les buffers + le DOM en fonction des dimensions serveur
+function configureCanvas(w, h) {
+  if (w === CANVAS_W && h === CANVAS_H && pixelBuffer.length === w * h) return;
+  CANVAS_W = w;
+  CANVAS_H = h;
+  canvasEl.width  = w;
+  canvasEl.height = h;
+  pixelBuffer = new Uint8Array(w * h);
+  imageData   = ctx.createImageData(w, h);
+  document.documentElement.style.setProperty('--w', String(w));
+  document.documentElement.style.setProperty('--h', String(h));
+}
 
 // ----- Palette UI ------------------------------------------------------------
 function buildPalette() {
@@ -189,9 +205,18 @@ function connect() {
 
   eventSource.addEventListener('init', (ev) => {
     let data; try { data = JSON.parse(ev.data); } catch (_) { return; }
+    if (data.width && data.height) configureCanvas(data.width, data.height);
     const bin = atob(data.canvas);
     const len = Math.min(bin.length, pixelBuffer.length);
     for (let i = 0; i < len; i++) pixelBuffer[i] = bin.charCodeAt(i);
+    repaintAll();
+  });
+
+  eventSource.addEventListener('reset', (ev) => {
+    let data; try { data = JSON.parse(ev.data); } catch (_) { data = {}; }
+    const fill = (data.color | 0) || DEFAULT_COLOR;
+    if (data.width && data.height) configureCanvas(data.width, data.height);
+    pixelBuffer.fill(fill);
     repaintAll();
   });
 
@@ -211,9 +236,57 @@ function connect() {
   });
 }
 
+// ----- Bouton reset (admin) --------------------------------------------------
+const TOKEN_KEY = 'pixelart.adminToken';
+
+async function doReset() {
+  let token = localStorage.getItem(TOKEN_KEY) || '';
+  if (!token) {
+    token = (window.prompt('Token admin pour reset ?') || '').trim();
+    if (!token) return;
+  }
+
+  try {
+    const res = await fetch('/admin/reset', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (res.status === 403) {
+      localStorage.removeItem(TOKEN_KEY);
+      alert('Token invalide.');
+      return;
+    }
+    if (res.status === 503) {
+      alert('Reset désactivé côté serveur (ADMIN_TOKEN non configuré).');
+      return;
+    }
+    if (!res.ok) {
+      alert(`Erreur ${res.status}`);
+      return;
+    }
+
+    // OK : on retient le token pour les prochains resets
+    localStorage.setItem(TOKEN_KEY, token);
+  } catch (err) {
+    alert('Erreur réseau : ' + err.message);
+  }
+}
+
+if (resetBtn) {
+  resetBtn.addEventListener('click', () => {
+    if (!confirm('Tout effacer ? (action irréversible)')) return;
+    doReset();
+  });
+}
+
 // ----- Boot ------------------------------------------------------------------
 buildPalette();
 selectColor(selectedColor);
 setZoom(zoom);
+configureCanvas(CANVAS_W, CANVAS_H);
 repaintAll();
 connect();

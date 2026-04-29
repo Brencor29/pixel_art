@@ -27,6 +27,7 @@
 
   <main class="stage">
     <div class="canvas-wrap" id="canvas-wrap">
+      <!-- les attributs width/height sont remplacés au runtime via configureCanvas() -->
       <canvas id="canvas" width="128" height="128"></canvas>
     </div>
   </main>
@@ -46,6 +47,7 @@
         <span class="selected-swatch" id="selected-swatch"></span>
         <span class="selected-index" id="selected-index">#0</span>
       </div>
+      <button class="reset-btn" id="reset-btn" type="button" title="Tout effacer (admin)">↺ reset</button>
     </div>
   </footer>
 
