@@ -1,0 +1,16 @@
+{
+  "name": "pixel-art-communautaire",
+  "version": "1.0.0",
+  "description": "Canvas pixel art collaboratif temps réel (128x128, palette PICO-8 32 couleurs)",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "express": "^4.21.0"
+  }
+}

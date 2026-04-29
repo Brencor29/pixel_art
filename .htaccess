@@ -1,0 +1,45 @@
+# --- Phusion Passenger / Node.js sur o2switch ---------------------------------
+# Sur o2switch, l'application Node.js est généralement déclarée dans le cPanel
+# ("Setup Node.js App"). Ce .htaccess complète/active Passenger pour ce dossier.
+
+PassengerEnabled On
+PassengerAppType node
+PassengerStartupFile app.js
+# PassengerNodejs : généralement défini par cPanel, à ajuster si besoin
+# PassengerNodejs /home/USER/nodevenv/pixel_art/18/bin/node
+PassengerAppEnv production
+
+# --- Support WebSocket --------------------------------------------------------
+# Apache/Passenger sait gérer les upgrades WebSocket nativement, mais on
+# s'assure que les en-têtes Upgrade/Connection ne sont pas filtrés.
+RewriteEngine On
+
+# Laisser passer l'upgrade WebSocket sans interférer
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule .* - [E=HTTP_CONNECTION:upgrade,L]
+
+# --- Sécurité : on cache les fichiers backend du document root ----------------
+# (le frontend s'appelle client.js, plus de collision)
+<IfModule mod_rewrite.c>
+  RewriteRule ^app\.js$           - [F,L]
+  RewriteRule ^package(-lock)?\.json$ - [F,L]
+  RewriteRule ^\.htaccess$        - [F,L]
+  RewriteRule ^data(/.*)?$        - [F,L]
+  RewriteRule ^node_modules(/.*)?$ - [F,L]
+</IfModule>
+
+<FilesMatch "^(app\.js|package\.json|package-lock\.json|\.htaccess)$">
+  Require all denied
+</FilesMatch>
+
+# --- En-têtes utiles ----------------------------------------------------------
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "no-referrer-when-downgrade"
+</IfModule>
+
+# --- Compression --------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json
+</IfModule>

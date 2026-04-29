@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>PixelArt</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>PixelArt <span class="dim">— 128×128, anarchie totale</span></h1>
+    <div class="stats">
+      <span class="stat">
+        <span class="stat-dot" id="status-dot"></span>
+        <span id="status-text">connexion…</span>
+      </span>
+      <span class="stat">
+        <span class="stat-label">utilisateurs</span>
+        <span class="stat-value" id="user-count">—</span>
+      </span>
+      <span class="stat">
+        <span class="stat-label">x,y</span>
+        <span class="stat-value" id="hover-coords">—</span>
+      </span>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <canvas id="canvas" width="128" height="128"></canvas>
+    </div>
+  </main>
+
+  <footer class="dock">
+    <div class="palette" id="palette" role="listbox" aria-label="Palette"></div>
+    <div class="controls">
+      <div class="zoom">
+        <span class="dim">zoom</span>
+        <button class="zoom-btn" data-zoom="4">×4</button>
+        <button class="zoom-btn is-active" data-zoom="8">×8</button>
+        <button class="zoom-btn" data-zoom="12">×12</button>
+        <button class="zoom-btn" data-zoom="16">×16</button>
+      </div>
+      <div class="selected">
+        <span class="dim">couleur</span>
+        <span class="selected-swatch" id="selected-swatch"></span>
+        <span class="selected-index" id="selected-index">#0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="client.js"></script>
+</body>
+</html>

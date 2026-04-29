@@ -1,0 +1,24 @@
+# Dépendances
+node_modules/
+
+# État du canvas (généré au runtime, ne pas versionner)
+data/*
+!data/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# Système
+.DS_Store
+Thumbs.db
+
+# Éditeurs / outils
+.vscode/
+.idea/
+.claude/
+*.swp
+
+# Env
+.env
+.env.local
