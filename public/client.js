@@ -37,6 +37,7 @@ const selectedSwatch = document.getElementById('selected-swatch');
 const selectedIndex  = document.getElementById('selected-index');
 const zoomBtns = document.querySelectorAll('.zoom-btn');
 const resetBtn  = document.getElementById('reset-btn');
+const canvasSizeEl = document.getElementById('canvas-size');
 
 const ctx = canvasEl.getContext('2d');
 let imageData  = ctx.createImageData(CANVAS_W, CANVAS_H);
@@ -47,6 +48,7 @@ let zoom = 8;
 
 // (Re)dimensionne tous les buffers + le DOM en fonction des dimensions serveur
 function configureCanvas(w, h) {
+  if (canvasSizeEl) canvasSizeEl.textContent = `${w}×${h}`;
   if (w === CANVAS_W && h === CANVAS_H && pixelBuffer.length === w * h) return;
   CANVAS_W = w;
   CANVAS_H = h;
